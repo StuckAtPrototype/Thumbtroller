@@ -10,6 +10,11 @@ A bit of a back-story of how this project came to be.
 [![My Kickstarter failed, so I open sourced it](https://img.youtube.com/vi/6jzG-BMannc/0.jpg)](https://www.youtube.com/watch?v=6jzG-BMannc)
 
 Sub if you like what you see.
+*Some pictures of the project*
+![Controller](https://github.com/user-attachments/assets/804627ec-b5f1-4288-8873-0c058cef95e1)
+![Controller 2](https://github.com/user-attachments/assets/a48f20d4-f13d-4558-9f68-3d6c77d5d479)
+![Controller 3](https://github.com/user-attachments/assets/88574793-af4a-4a0e-9e00-fc3c3a3dbc2c)
+
 
 ## Project Structure
 The project consists of
