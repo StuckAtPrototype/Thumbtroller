@@ -3,46 +3,136 @@
 #include "led.h"
 #include "driver/gpio.h"
 #include <stdio.h>
+#include "esp_log.h"
 
-static bool led_state[NUM_LEDS] = {false};
+#define TAG "LED"
 
-static void configure_led(int gpio)
-{
-    gpio_config_t io_conf = {
-            .intr_type = GPIO_INTR_DISABLE,
-            .mode = GPIO_MODE_OUTPUT,
-            .pin_bit_mask = (1ULL << gpio),
-            .pull_down_en = 0,
-            .pull_up_en = 0
-    };
-    gpio_config(&io_conf);
+// static function definitions
+static void led_task(void *pvParameters);
+
+// static variables
+static struct led_state led_new_state;
+
+
+/* static declaration of the shared configuration
+ * LED0 == connection
+ * LED1 == car color sync
+ * LED2 == battery status
+ */
+static led_config_t led_config[3];
+
+void led_init(void) {
+    ws2812_control_init();
+    // initiate the structures
+    led_config[LED_BATTERY].led_color = LED_COLOR_GREEN;
+    led_config[LED_CONNECTION].led_color = LED_COLOR_GREEN;
+    led_config[LED_COLOR_STATUS].led_color = LED_COLOR_GREEN;
+
+    BaseType_t ret = xTaskCreate(led_task, "led_task", 2048, NULL, 10, NULL);
+    if (ret != pdPASS) {
+        ESP_LOGE(TAG, "Failed to create LED task");
+    } else {
+        ESP_LOGI(TAG, "LED task created successfully");
+    }
 }
 
-void led_init(void)
-{
-    configure_led(LED_1_GPIO);
-    configure_led(LED_2_GPIO);
-    configure_led(LED_3_GPIO);
+static void led_write_config(void){
+
 }
 
-void set_led(int led_index, bool state)
-{
+void led_set(int led_index, led_config_t config) {
     if (led_index < 0 || led_index >= NUM_LEDS) {
-        printf("Invalid LED index\n");
+        ESP_LOGE(TAG, "Invalid LED index");
         return;
     }
 
-    int gpio_num;
-    switch(led_index) {
-        case 0: gpio_num = LED_1_GPIO; break;
-        case 1: gpio_num = LED_2_GPIO; break;
-        case 2: gpio_num = LED_3_GPIO; break;
+    // set the led configuration
+    led_config[led_index] = config;
+
+}
+
+void led_batt_set(uint8_t charge_now){
+    if(charge_now == 1){
+        led_config[LED_BATTERY].led_color = LED_COLOR_RED;
+    } else {
+        led_config[LED_BATTERY].led_color = LED_COLOR_GREEN;
+    }
+}
+
+void led_conn_set(uint8_t connected){
+    if(connected == 1){
+        led_config[LED_CONNECTION].led_color = LED_COLOR_BLUE;
+        ESP_LOGI(TAG, "Connection LED set to BLUE (0x%08X)", LED_COLOR_BLUE);
+    } else {
+        led_config[LED_CONNECTION].led_color = LED_COLOR_OFF;
+        ESP_LOGI(TAG, "Connection LED set to OFF");
+    }
+}
+
+void led_status_color_set(uint32_t color){
+    led_config[LED_COLOR_STATUS].led_color = color;
+}
+
+void led_batt_control_mode_set(uint32_t color){
+    led_config[LED_BATTERY].led_color = color;
+}
+
+// Test mode functions
+void led_test_mode_button_pressed(int button_index) {
+    uint32_t color;
+    switch(button_index) {
+        case 0:
+            color = LED_COLOR_TEST_BUTTON_0;
+            break;
+        case 1:
+            color = LED_COLOR_TEST_BUTTON_1;
+            break;
+        case 2:
+            color = LED_COLOR_TEST_BUTTON_2;
+            break;
+        case 3:
+            color = LED_COLOR_TEST_BUTTON_3;
+            break;
+        case 4:
+            color = LED_COLOR_TEST_BUTTON_4;
+            break;
         default:
-            printf("Invalid LED index\n");
-            return;
+            color = LED_COLOR_OFF;
+            break;
+    }
+    led_config[LED_CONNECTION].led_color = color;
+}
+
+void led_test_mode_button_released(void) {
+    led_config[LED_CONNECTION].led_color = LED_COLOR_OFF;
+}
+
+void led_test_mode_joystick_x_active(void) {
+    led_config[LED_CONNECTION].led_color = LED_COLOR_TEST_JOYSTICK_X;
+}
+
+void led_test_mode_joystick_y_active(void) {
+    led_config[LED_CONNECTION].led_color = LED_COLOR_TEST_JOYSTICK_Y;
+}
+
+void led_test_mode_joystick_inactive(void) {
+    led_config[LED_CONNECTION].led_color = LED_COLOR_OFF;
+}
+
+// this will alter the LED behavior over time
+// for example pulse, blink, etc
+// it will also clear state over time as necessary
+static void led_task(void *pvParameters) {
+
+    while(1){
+        for(int i = 0; i < NUM_LEDS; i++){
+            led_new_state.leds[i] = led_config[i].led_color;
+        }
+        
+
+        ws2812_write_leds(led_new_state);
+
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 
-    led_state[led_index] = state;
-    gpio_set_level(gpio_num, state ? 1 : 0);
-    printf("LED %d (GPIO %d) set to %s\n", led_index, gpio_num, state ? "ON" : "OFF");
 }

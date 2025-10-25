@@ -16,51 +16,73 @@ esp_err_t adc_init(void)
             .unit_id = ADC_UNIT,
             .ulp_mode = ADC_ULP_MODE_DISABLE,
     };
-    ESP_ERROR_CHECK(adc_oneshot_new_unit(&init_config1, &adc1_handle));
+
+    esp_err_t ret = adc_oneshot_new_unit(&init_config1, &adc1_handle);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to create new ADC unit");
+        return ret;
+    }
 
     adc_oneshot_chan_cfg_t config = {
             .atten = ADC_ATTEN,
             .bitwidth = ADC_BITWIDTH,
     };
 
-    ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, ADC_CHANNEL_0, &config));
-    ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, ADC_CHANNEL_1, &config));
-    ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, ADC_CHANNEL_2, &config));
+    ret = adc_oneshot_config_channel(adc1_handle, THUMB_ADC_CHANNEL_0, &config);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to configure ADC channel 0");
+        return ret;
+    }
+
+    ret = adc_oneshot_config_channel(adc1_handle, THUMB_ADC_CHANNEL_1, &config);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to configure ADC channel 1");
+        return ret;
+    }
+
+    ret = adc_oneshot_config_channel(adc1_handle, THUMB_ADC_CHANNEL_2, &config);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to configure ADC channel 2");
+        return ret;
+    }
 
     ESP_LOGI(TAG, "ADC initialized successfully");
     return ESP_OK;
 }
 
-esp_err_t read_adc(adc1_channel_t channel, int *adc_reading)
+esp_err_t read_adc(adc_channel_t channel, int *adc_reading)
 {
-    if (channel != ADC_CHANNEL_0 && channel != ADC_CHANNEL_1 && channel != ADC_CHANNEL_2) {
-        ESP_LOGE(TAG, "Invalid ADC channel");
+    if (channel != THUMB_ADC_CHANNEL_0 && channel != THUMB_ADC_CHANNEL_1 && channel != THUMB_ADC_CHANNEL_2) {
+        ESP_LOGE(TAG, "Invalid ADC channel: %d", channel);
         return ESP_ERR_INVALID_ARG;
     }
 
     esp_err_t ret = adc_oneshot_read(adc1_handle, channel, adc_reading);
     if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "ADC read failed");
+        ESP_LOGE(TAG, "ADC read failed on channel %d", channel);
         return ret;
     }
 
-    ESP_LOGI(TAG, "ADC Channel %d Raw: %d", channel, *adc_reading);
-
+    ESP_LOGD(TAG, "ADC Channel %d Raw: %d", channel, *adc_reading);
     return ESP_OK;
 }
 
-esp_err_t read_battery_voltage(float *voltage)
+esp_err_t adc_read_battery_voltage(float *voltage)
 {
-    int raw;
-    esp_err_t ret = read_adc(ADC_CHANNEL_2, &raw);
-    if (ret != ESP_OK) {
-        return ret;
-    }
+   int raw;
+   esp_err_t ret = read_adc(THUMB_ADC_CHANNEL_2, &raw);
+   if (ret != ESP_OK) {
+       return ret;
+   }
 
-    // Apply the correction formula for battery voltage
-    *voltage = (1.4925f * raw - 511.83f) / 1000.0f;
+   // Convert ADC raw reading to voltage applying your calibration formula if needed
+   // Example placeholder formula from your earlier code (uncomment and adjust as needed):
+   // *voltage = (1.4925f * raw - 511.83f) / 1000.0f;
 
-    ESP_LOGI(TAG, "Battery Voltage: %.3f V", *voltage);
+   // For now, just cast raw ADC value to float
+   *voltage = (float)raw;
+
+//    ESP_LOGD(TAG, "Battery Voltage: %.3f V", *voltage);
 
     return ESP_OK;
 }
