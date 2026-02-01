@@ -6,8 +6,8 @@
 #include "freertos/queue.h"
 
 // Define the interrupt pin
-#define INTERRUPT_PIN_A 5
-#define INTERRUPT_PIN_B 10
+#define INTERRUPT_PIN_A 13
+#define INTERRUPT_PIN_B 22
 
 // Function prototypes
 void configure_gpio_interrupt(void);

@@ -4,7 +4,7 @@
 
 
 uint8_t gatt_svr_chr_ota_control_val;
-uint8_t gatt_svr_chr_ota_data_val[128];
+uint8_t gatt_svr_chr_ota_data_val[16];
 
 uint16_t ota_control_val_handle;
 uint16_t ota_data_val_handle;
@@ -12,8 +12,8 @@ uint16_t ota_data_val_handle;
 uint16_t num_pkgs_received = 0;
 uint16_t packet_size = 0;
 
-static const char *manuf_name = "DreamNight LLC";
-static const char *model_num = "Rover-v1";
+static const char *manuf_name = "StuckAtPrototype";
+static const char *model_num = "Racer-v3";
 
 static int gatt_svr_chr_write(struct os_mbuf *om, uint16_t min_len,
                               uint16_t max_len, void *dst, uint16_t *len);
