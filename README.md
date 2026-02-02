@@ -18,9 +18,11 @@ The project consists of
 3. Mechanical 
 
 #### Requirements
-- ESP32 IDF version 5.3.1
-- USB to Serial dongle
+- ESP-IDF 5.5
+- Git (for cloning ESP-IDF and this repo; see [BUILD_WINDOWS.md](BUILD_WINDOWS.md) if you need to install it)
 - Target set to ESP32-H2
+
+**Windows:** See [BUILD_WINDOWS.md](BUILD_WINDOWS.md) for a step-by-step guide: install Git if needed, clone ESP-IDF 5.5, build, and flash the firmware using Command Prompt.
 
 ---
 ## License
